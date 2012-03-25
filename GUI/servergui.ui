@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ServerGUI</class>
+ <widget class="QMainWindow" name="ServerGUI">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>801</width>
+    <height>573</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QGroupBox" name="groupBox">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>0</y>
+      <width>781</width>
+      <height>501</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Activity:</string>
+    </property>
+    <widget class="QTextEdit" name="teActivity">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>761</width>
+       <height>461</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QPushButton" name="pbListen">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>500</y>
+      <width>114</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Listen</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pbExit">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>500</y>
+      <width>114</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Exit</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>801</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuChat_Server_by_Absolution">
+    <property name="title">
+     <string>Menu</string>
+    </property>
+    <addaction name="menuListen"/>
+    <addaction name="separator"/>
+    <addaction name="menuQuit"/>
+   </widget>
+   <addaction name="menuChat_Server_by_Absolution"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="menuListen">
+   <property name="text">
+    <string>Listen</string>
+   </property>
+  </action>
+  <action name="menuQuit">
+   <property name="text">
+    <string>Quit</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
