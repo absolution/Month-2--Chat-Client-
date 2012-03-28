@@ -19,15 +19,15 @@ class Messenger(asyncore.dispatcher_with_send):
         asyncore.dispatcher_with_send.__init__(self, sock)
         self.server = server
         self.username = ''
-        self.send("Server: Welcome to the server.")
+        self.new_connection()
 
     def handle_read(self):
         data = self.recv(8192)
         if data:
             if data.strip().startswith('uname:'):
                 username = data.strip()
-                username = username.split(':')
-                self.username = username[1]
+                self.username = username.split(':')[1]
+                self.server.usernames.append(self.username)
                 self.server.write_gui.put(self.server.write_to_gui_log("%s connected." % (self.username)))
             else:
                 datatosend = "%s: %s" % (self.username, data)
@@ -39,6 +39,9 @@ class Messenger(asyncore.dispatcher_with_send):
         asyncore.dispatcher_with_send.handle_close(self)
         self.server.client_disconnect(self)
 
+    def new_connection(self):
+        self.server.message_user('Welcome to the server.\n', self)
+
 
 class ConnectionHandler(asyncore.dispatcher):
 
@@ -49,6 +52,7 @@ class ConnectionHandler(asyncore.dispatcher):
         self.bind((host, port))
         self.listen(5)
         self.clients = []
+        self.usernames = []
         self.gui = gui
         self.write_gui = Queue.Queue()
         startText = "Server Started on: %s @ %s" % (host, port)
@@ -61,11 +65,21 @@ class ConnectionHandler(asyncore.dispatcher):
         else:
             sock, addr = pair
             self.clients.append(Messenger(self, sock))
+            self.send_userlist()
 
     def broadcast(self, text, sender):
         for client in self.clients:
             if client != sender:
                 client.send(text)
+
+    def message_user(self, text, user):
+        user.send(text)
+
+    def send_userlist(self):
+        ulist = "ulist:%s" % (','.join(self.usernames))
+        for client in self.clients:
+            client.send(ulist)
+
 
     def client_disconnect(self, client):
         self.clients.remove(client)

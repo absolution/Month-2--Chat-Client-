@@ -53,18 +53,54 @@
        </rect>
       </property>
      </widget>
-     <widget class="QTextEdit" name="teChatLog">
+     <widget class="QGroupBox" name="groupBox">
+      <property name="geometry">
+       <rect>
+        <x>620</x>
+        <y>-1</y>
+        <width>151</width>
+        <height>481</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Users</string>
+      </property>
+      <widget class="QListWidget" name="qlwUsers">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>131</width>
+         <height>441</height>
+        </rect>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_2">
       <property name="geometry">
        <rect>
         <x>10</x>
         <y>0</y>
-        <width>761</width>
+        <width>601</width>
         <height>481</height>
        </rect>
       </property>
-      <property name="readOnly">
-       <bool>true</bool>
+      <property name="title">
+       <string>Chat Log</string>
       </property>
+      <widget class="QTextEdit" name="teChatLog">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>581</width>
+         <height>441</height>
+        </rect>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
      </widget>
     </widget>
     <widget class="QWidget" name="tabOptions">

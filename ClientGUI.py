@@ -23,31 +23,47 @@ class ClientConnection(asyncore.dispatcher_with_send):
         self.gui = gui
         self.msgRecvd = Queue.Queue()
 
+    # On connection send the username
     def handle_connect(self):
         sendUname = "uname:%s" % (self.username)
         self.send(sendUname)
 
+    # Handle closing of the socket
     def handle_close(self):
         self.close()
 
+    # Handle information coming from the socket
     def handle_read(self):
-        data = self.recv(8192)
+        data = self.recv(1024)
         if data:
-            self.msgRecvd.put(self.post_Message(data))
+            print data
+            if data.find("ulist"):
+                print 'received user list'
+                data = data.split(':')
+                users = data[1].split(',')
+                self.gui.qlwUsers.clear()
+                for user in users:
+                    self.gui.qlwUsers.addItem(user.strip())
+            else:
+                self.msgRecvd.put(self.post_Message(data))
 
+    # Send message to the server
     def send_Message(self, message):
         self.send(message)
 
+    # Send message to GUI thread to be placed in chat log
     def post_Message(self, message):
         return self.gui.Write_to_Log(message)
 
 
 class ClientThread(threading.Thread):
 
+    # Start the thread for the socket
     def __init__(self, server, port, user, gui):
         threading.Thread.__init__(self)
         self.client = ClientConnection(server, int(port), user, gui)
 
+    # Run the asyncore loop
     def run(self):
         asyncore.loop()
 
@@ -77,6 +93,8 @@ class ChatClientGUI(object):
         self.menuConnect = self.widget.findChild(QAction, 'menuConnect')
         self.menuDisconnect = self.widget.findChild(QAction, 'menuDisconnect')
         self.menuExit = self.widget.findChild(QAction, 'menuQuit')
+            # List Widget
+        self.qlwUsers = self.widget.findChild(QListWidget, 'qlwUsers')
             # Text Boxes
         self.teChatLog = self.widget.findChild(QTextEdit, 'teChatLog')
         self.leUsername = self.widget.findChild(QLineEdit, 'leUsername')
@@ -91,10 +109,13 @@ class ChatClientGUI(object):
         self.pbConnect.clicked.connect(self.ConnectServer)
         self.pbSend.clicked.connect(self.SendMessage)
 
+        self.qlwUsers.addItem('Test')
+        self.qlwUsers.addItem('Test1')
+
         # Launch Application
         self.app.exec_()
 
-    ## Exit App
+    # Exit App
     def ExitApp(self):
         sys.exit(0)
 
