@@ -19,7 +19,6 @@ class Messenger(asyncore.dispatcher_with_send):
         asyncore.dispatcher_with_send.__init__(self, sock)
         self.server = server
         self.username = ''
-        self.new_connection()
 
     def handle_read(self):
         data = self.recv(8192)
@@ -29,6 +28,7 @@ class Messenger(asyncore.dispatcher_with_send):
                 self.username = username.split(':')[1]
                 self.server.usernames.append(self.username)
                 self.server.write_gui.put(self.server.write_to_gui_log("%s connected." % (self.username)))
+                self.new_connection()
             else:
                 datatosend = "%s: %s" % (self.username, data)
                 self.server.write_gui.put(self.server.write_to_gui_log(datatosend))
@@ -36,10 +36,14 @@ class Messenger(asyncore.dispatcher_with_send):
 
     def handle_close(self):
         self.server.write_gui.put(self.server.write_to_gui_log("%s left." % (self.username)))
-        asyncore.dispatcher_with_send.handle_close(self)
+        self.server.broadcast("%s left the chat.\n" % (self.username), self)
+        self.server.usernames.remove(self.username)
+        self.server.send_userlist()
         self.server.client_disconnect(self)
+        asyncore.dispatcher_with_send.handle_close(self)
 
     def new_connection(self):
+        self.server.send_userlist()
         self.server.message_user('Welcome to the server.\n', self)
 
 
@@ -65,21 +69,20 @@ class ConnectionHandler(asyncore.dispatcher):
         else:
             sock, addr = pair
             self.clients.append(Messenger(self, sock))
-            self.send_userlist()
 
     def broadcast(self, text, sender):
-        for client in self.clients:
-            if client != sender:
-                client.send(text)
+        if self.usernames != None:
+            for client in self.clients:
+                if client != sender:
+                    client.send(text)
 
     def message_user(self, text, user):
         user.send(text)
 
     def send_userlist(self):
-        ulist = "ulist:%s" % (','.join(self.usernames))
+        ulist = "ulist:%s\n" % (','.join(self.usernames))
         for client in self.clients:
             client.send(ulist)
-
 
     def client_disconnect(self, client):
         self.clients.remove(client)
@@ -102,7 +105,10 @@ class Server_Thread(threading.Thread):
         self.server = ConnectionHandler(host, port, gui)
 
     def run(self):
-        asyncore.loop()
+        try:
+            asyncore.loop()
+        except:
+            return 0
 
     def stop(self):
         #self.server.shutdown()
@@ -127,7 +133,7 @@ class ChatServerGUI(object):
         # Associate UI Elements
             # Menu Items
         self.menuListen = self.widget.findChild(QAction, 'menuListen')
-        self.menuExit = self.widget.findChild(QAction, 'menuQuit')
+        self.menuQuit = self.widget.findChild(QAction, 'menuQuit')
             # Text Edit
         self.teActivity = self.widget.findChild(QTextEdit, 'teActivity')
             # Buttons
@@ -139,13 +145,17 @@ class ChatServerGUI(object):
             # Buttons
         self.pbListen.clicked.connect(self.Start_Server)
         self.pbExit.clicked.connect(self.ExitApp)
+            # Menu Items
+        self.menuListen.triggered.connect(self.Start_Server)
+        self.menuQuit.triggered.connect(self.ExitApp)
 
         # Launch Application
         self.app.exec_()
 
     ## Exit App
     def ExitApp(self):
-        self.server.stop()
+        self.server.server.close()
+        self.server.join()
         sys.exit(0)
 
     def Start_Server(self):

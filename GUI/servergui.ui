@@ -94,7 +94,7 @@
   </action>
   <action name="menuQuit">
    <property name="text">
-    <string>Quit</string>
+    <string>Bye</string>
    </property>
   </action>
  </widget>

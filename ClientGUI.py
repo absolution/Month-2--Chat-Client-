@@ -30,22 +30,24 @@ class ClientConnection(asyncore.dispatcher_with_send):
 
     # Handle closing of the socket
     def handle_close(self):
+        print "closing"
         self.close()
 
     # Handle information coming from the socket
     def handle_read(self):
-        data = self.recv(1024)
+        data = self.recv(8192)
         if data:
-            print data
-            if data.find("ulist"):
-                print 'received user list'
-                data = data.split(':')
-                users = data[1].split(',')
-                self.gui.qlwUsers.clear()
-                for user in users:
-                    self.gui.qlwUsers.addItem(user.strip())
-            else:
-                self.msgRecvd.put(self.post_Message(data))
+            lines = data.split('\n')
+            for line in lines:
+                if line.startswith("ulist"):
+                    line = line.split(':')
+                    users = line[1].split(',')
+                    self.gui.qlwUsers.clear()
+                    for user in users:
+                        self.gui.qlwUsers.addItem(user.strip())
+                else:
+                    if line.strip() != '':
+                        self.msgRecvd.put(self.post_Message(line))
 
     # Send message to the server
     def send_Message(self, message):
@@ -65,7 +67,10 @@ class ClientThread(threading.Thread):
 
     # Run the asyncore loop
     def run(self):
-        asyncore.loop()
+        try:
+            asyncore.loop()
+        except:
+            return 0
 
 
 class ChatClientGUI(object):
@@ -104,19 +109,28 @@ class ChatClientGUI(object):
             # Push Buttons
         self.pbSend = self.widget.findChild(QPushButton, 'pbSend')
         self.pbConnect = self.widget.findChild(QPushButton, 'pbConnect')
+        self.pbDisconnect = self.widget.findChild(QPushButton, 'pbDisconnect')
+        self.pbExit = self.widget.findChild(QPushButton, 'pbExit')
         # Connect Objects to Functions
             # Push Buttons
         self.pbConnect.clicked.connect(self.ConnectServer)
+        self.pbDisconnect.clicked.connect(self.DisconnectServer)
         self.pbSend.clicked.connect(self.SendMessage)
-
-        self.qlwUsers.addItem('Test')
-        self.qlwUsers.addItem('Test1')
+        self.pbExit.clicked.connect(self.ExitApp)
+            # Menu Items
+        self.menuConnect.triggered.connect(self.ConnectServer)
+        self.menuDisconnect.triggered.connect(self.DisconnectServer)
+        self.menuExit.triggered.connect(self.ExitApp)
 
         # Launch Application
         self.app.exec_()
 
     # Exit App
     def ExitApp(self):
+        try:
+            self.startClient.client.close()
+        except:
+            pass
         sys.exit(0)
 
     def ConnectServer(self):
@@ -125,6 +139,12 @@ class ChatClientGUI(object):
         self.username = self.leUsername.text()
         self.startClient = ClientThread(server, port, self.username, self)
         self.startClient.start()
+        self.twOptions.setCurrentIndex(0)
+
+    def DisconnectServer(self):
+        self.startClient.client.close()
+        self.startClient.join()
+        self.teChatLog.append("You have disconnected from %s" % (self.leServerIP.text()))
         self.twOptions.setCurrentIndex(0)
 
     def SendMessage(self):
